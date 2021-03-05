@@ -2,82 +2,100 @@ from __future__ import print_function
 import sys
 sys.path.append('..')
 from Game import Game
-from .TicTacToeLogic import Board
+from .UltimateTicTacToeLogic import GlobalBoard
 import numpy as np
 
-"""
-Game class implementation for the game of TicTacToe.
-Based on the OthelloGame then getGameEnded() was adapted to new rules.
+'''
+Game class implementation for the game of Ultimate TicTacToe
 
-Author: Evgeny Tyurin, github.com/evg-tyurin
-Date: Jan 5, 2018.
+Author: Alwin Hollebrandse, github.com/AlwinHollebrandse
+Date: March 5, 2021.
 
-Based on the OthelloGame by Surag Nair.
-"""
+Based on the TicTacToe by Adam Lawson.
+'''
+
 class TicTacToeGame(Game):
-    def __init__(self, n=3):
+    def __init__(self, n=3, numberOfLocalBoards=9):
         self.n = n
+        self.numberOfLocalBoards = numberOfLocalBoards
 
     def getInitBoard(self):
-        # return initial board (numpy board)
-        b = Board(self.n)
-        return np.array(b.pieces)
+        '''return initial board (numpy board)'''
+        b = GlobalBoard(self.n, self.numberOfLocalBoards)
+        return np.array(b.globalBoard)
 
     def getBoardSize(self):
-        # (a,b) tuple
-        return (self.n, self.n)
+        '''return (a,b,c) tuple'''
+        return (self.numberOfLocalBoards, self.n, self.n)
 
     def getActionSize(self):
-        # return number of actions
-        return self.n*self.n + 1
+        '''return number of actions'''
+        return self.numberOfLocalBoards * self.n * self.n + 1
 
     def getNextState(self, board, player, action): # TODO need to recall prev local/curr localboard, while only returnung the tuple
-        # if player takes action on board, return next (board,player)
-        # action must be a valid move
-        if action == self.n*self.n:
+        '''if player takes action on board, return next (board,player)
+        action must be a valid move
+        '''
+        if action == self.numberOfLocalBoards * self.n * self.n: # TODO why allow for a skip?
             return (board, -player)
-        b = Board(self.n)
-        b.pieces = np.copy(board)
-        move = (int(action/self.n), action%self.n)
+        b = GlobalBoard(self.n, self.numberOfLocalBoards)
+        b.globalBoard = np.copy(board)
+
+        # TODO the 3d version had this, NOTE it basically is option 2 of the below TODO
+        # boardvalues = np.arange(0,(self.n*self.n*self.n)).reshape(self.n,self.n,self.n)
+        # move = np.argwhere(boardvalues==action)[0]
+        # b.execute_move(move, player)
+
+        # move is int that is 0-getActionSize
+        # TODO is 0-8 first localboard values, or the top 9 vlaues of the global board?
+        localBoardIndex = int(action / self.numberOfLocalBoards) # NOTE this uses the option 1 in above TODO
+        localRow = int(localBoardIndex / self.n)
+        localCol = int(localBoardIndex % self.n)
+        move = (localBoardIndex, localRow, localCol) # TODO first tuple value relates to action how?
         b.execute_move(move, player)
-        return (b.pieces, -player)
+        return (b.globalBoard, -player)
 
     def getValidMoves(self, board, player):
-        # return a fixed size binary vector
+        '''return a fixed size binary vector'''
         valids = [0]*self.getActionSize()
-        b = Board(self.n)
-        b.pieces = np.copy(board)
-        legalMoves =  b.get_legal_moves(player)
-        if len(legalMoves)==0:
-            valids[-1]=1
+        b = GlobalBoard(self.n, self.numberOfLocalBoards)
+        b.globalBoard = np.copy(board)
+        legalMoves = b.get_legal_moves(player)
+        if len(legalMoves) == 0:
+            valids[-1] = 1
             return np.array(valids)
-        for x, y in legalMoves:
-            valids[self.n*x+y]=1
+        for localBoardIndex, localRow, localCol in legalMoves:
+            valids[(self.numberOfLocalBoards * localBoardIndex) + (self.n * localRow) + localCol] = 1
         return np.array(valids)
 
     def getGameEnded(self, board, player):
-        # return 0 if not ended, 1 if player 1 won, -1 if player 1 lost
+        '''return 0 if not ended, 1 if player 1 won, -1 if player 1 lost
         # player = 1
-        b = Board(self.n)
-        b.pieces = np.copy(board)
+        '''
+        b = GlobalBoard(self.n, self.numberOfLocalBoards)
+        b.globalBoard = np.copy(board)
 
-        if b.is_win(player):
+        globalWinner = b.get_global_winner()
+        if globalWinner == player:
             return 1
-        if b.is_win(-player):
+        elif globalWinner == -player:
             return -1
-        if b.has_legal_moves():
+        elif globalWinner == None:
             return 0
+
         # draw has a very little value 
         return 1e-4
 
+    # TODO does this work with the unavailable 2 value?
     def getCanonicalForm(self, board, player):
-        # return state if player==1, else return -state if player==-1
+        '''return state if player==1, else return -state if player==-1'''
         return player*board
 
+    # TODO not confident about this method
     def getSymmetries(self, board, pi):
-        # mirror, rotational
-        assert(len(pi) == self.n**2+1)  # 1 for pass
-        pi_board = np.reshape(pi[:-1], (self.n, self.n))
+        '''mirror, rotational'''
+        # assert(len(pi) == self.n**2+1)  # 1 for pass TODO what should this be? 3d doesnt have it, orthello does
+        pi_board = np.reshape(pi[:-1], (self.numberOfLocalBoards, self.n, self.n))
         l = []
 
         for i in range(1, 5):
@@ -91,35 +109,25 @@ class TicTacToeGame(Game):
         return l
 
     def stringRepresentation(self, board):
-        # 8x8 numpy array (canonical board)
+        '''8x8 numpy array (canonical board)'''
         return board.tostring()
 
     @staticmethod
     def display(board):
-        n = board.shape[0]
-
-        print("   ", end="")
-        for y in range(n):
-            print (y,"", end="")
-        print("")
-        print("  ", end="")
-        for _ in range(n):
-            print ("-", end="-")
-        print("--")
-        for y in range(n):
-            print(y, "|",end="")    # print the row #
-            for x in range(n):
-                piece = board[y][x]    # get the piece to print
-                if piece == -1: print("X ",end="")
-                elif piece == 1: print("O ",end="")
-                else:
-                    if x==n:
-                        print("-",end="")
-                    else:
-                        print("- ",end="")
-            print("|")
-
-        print("  ", end="")
-        for _ in range(n):
-            print ("-", end="-")
-        print("--")
+        print('\n')
+        localBoardIndexes = [[0,1,2],[3,4,5],[6,7,8]]
+        for layer in localBoardIndexes:
+            print('-----------------------------------------')
+            print('| ' + str(board[layer[0]][0][0]) + ' | ' + str(board[layer[0]][0][1]) + ' | ' + str(board[layer[0]][0][2]) + ' ||| ' +
+                str(board[layer[1]][0][0]) + ' | ' + str(board[layer[1]][0][1]) + ' | ' + str(board[layer[1]][0][2]) + ' ||| ' +
+                str(board[layer[2]][0][0]) + ' | ' + str(board[layer[2]][0][1]) + ' | ' + str(board[layer[2]][0][2]) + ' |')
+            print('-----------------------------------------')
+            print('| ' + str(board[layer[0]][1][0]) + ' | ' + str(board[layer[0]][1][1]) + ' | ' + str(board[layer[0]][1][2]) + ' ||| ' +
+                str(board[layer[1]][1][0]) + ' | ' + str(board[layer[1]][1][1]) + ' | ' + str(board[layer[1]][1][2]) + ' ||| ' +
+                str(board[layer[2]][1][0]) + ' | ' + str(board[layer[2]][1][1]) + ' | ' + str(board[layer[2]][1][2]) + ' |')
+            print('-----------------------------------------')
+            print('| ' + str(board[layer[0]][2][0]) + ' | ' + str(board[layer[0]][2][1]) + ' | ' + str(board[layer[0]][2][2]) + ' ||| ' +
+                str(board[layer[1]][2][0]) + ' | ' + str(board[layer[1]][2][1]) + ' | ' + str(board[layer[1]][2][2]) + ' ||| ' +
+                str(board[layer[2]][2][0]) + ' | ' + str(board[layer[2]][2][1]) + ' | ' + str(board[layer[2]][2][2]) + ' |')    
+            print('-----------------------------------------')
+        print('\n')
