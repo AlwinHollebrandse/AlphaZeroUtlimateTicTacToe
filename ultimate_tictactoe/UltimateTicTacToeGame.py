@@ -14,15 +14,16 @@ Date: March 5, 2021.
 Based on the TicTacToe by Adam Lawson.
 '''
 
-class TicTacToeGame(Game):
+class UltimateTicTacToeGame(Game):
     def __init__(self, n=3, numberOfLocalBoards=9):
         self.n = n
         self.numberOfLocalBoards = numberOfLocalBoards
+        self.b = GlobalBoard(self.n, self.numberOfLocalBoards)
 
     def getInitBoard(self):
         '''return initial board (numpy board)'''
-        b = GlobalBoard(self.n, self.numberOfLocalBoards)
-        return np.array(b.globalBoard)
+        # b = GlobalBoard(self.n, self.numberOfLocalBoards)
+        return np.array(self.b.globalBoard)
 
     def getBoardSize(self):
         '''return (a,b,c) tuple'''
@@ -38,8 +39,8 @@ class TicTacToeGame(Game):
         '''
         if action == self.numberOfLocalBoards * self.n * self.n: # TODO why allow for a skip?
             return (board, -player)
-        b = GlobalBoard(self.n, self.numberOfLocalBoards)
-        b.globalBoard = np.copy(board)
+        # b = GlobalBoard(self.n, self.numberOfLocalBoards)
+        self.b.globalBoard = np.copy(board)
 
         # TODO the 3d version had this, NOTE it basically is option 2 of the below TODO
         # boardvalues = np.arange(0,(self.n*self.n*self.n)).reshape(self.n,self.n,self.n)
@@ -52,15 +53,16 @@ class TicTacToeGame(Game):
         localRow = int(localBoardIndex / self.n)
         localCol = int(localBoardIndex % self.n)
         move = (localBoardIndex, localRow, localCol) # TODO first tuple value relates to action how?
-        b.execute_move(move, player)
-        return (b.globalBoard, -player)
+        self.b.execute_move(move, player)
+        return (self.b.globalBoard, -player)
 
     def getValidMoves(self, board, player):
         '''return a fixed size binary vector'''
         valids = [0]*self.getActionSize()
-        b = GlobalBoard(self.n, self.numberOfLocalBoards)
-        b.globalBoard = np.copy(board)
-        legalMoves = b.get_legal_moves(player)
+        # TODO by recreating GlobalBoard each time, validLocalBoardIndex is lost and valid moves is wrong
+        # b = GlobalBoard(self.n, self.numberOfLocalBoards) # TODO why cant this just be global? and reset on the init func?
+        self.b.globalBoard = np.copy(board)
+        legalMoves = self.b.get_legal_moves(player)
         if len(legalMoves) == 0:
             valids[-1] = 1
             return np.array(valids)
@@ -72,10 +74,10 @@ class TicTacToeGame(Game):
         '''return 0 if not ended, 1 if player 1 won, -1 if player 1 lost
         # player = 1
         '''
-        b = GlobalBoard(self.n, self.numberOfLocalBoards)
-        b.globalBoard = np.copy(board)
+        # b = GlobalBoard(self.n, self.numberOfLocalBoards)
+        self.b.globalBoard = np.copy(board)
 
-        globalWinner = b.get_global_winner()
+        globalWinner = self.b.get_global_winner()
         if globalWinner == player:
             return 1
         elif globalWinner == -player:
