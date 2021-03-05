@@ -1,10 +1,10 @@
 import numpy as np
 
 """
-Random and Human-ineracting players for the game of TicTacToe.
+Random and Human-ineracting players for the game of Ultimate TicTacToe.
 
-Author: Evgeny Tyurin, github.com/evg-tyurin
-Date: Jan 5, 2018.
+Author: Alwin Hollebrandse, github.com/AlwinHollebrandse
+Date: March 5, 2021.
 
 Based on the OthelloPlayers by Surag Nair.
 
@@ -22,8 +22,10 @@ class RandomPlayer():
 
 
 class HumanTicTacToePlayer():
-    def __init__(self, game):
+    def __init__(self, game, n, numberOfLocalBoards):
         self.game = game
+        self.n = n
+        self.numberOfLocalBoards = numberOfLocalBoards
 
     def play(self, board):
         # display(board)
@@ -37,8 +39,9 @@ class HumanTicTacToePlayer():
             # Python 2.x 
             # a = raw_input()
 
-            x,y = [int(x) for x in a.split(' ')] # TODO get [0-80], or local board then 0-8
-            a = self.game.n * x + y if x!= -1 else self.game.n ** 2
+            localBoardIndex, localRow, localCol = [int(x) for x in a.split(' ')]
+            boardvalues = np.arange(self.numberOfLocalBoards*self.n*self.n).reshape(self.numberOfLocalBoards,self.n,self.n)
+            a = boardvalues[localBoardIndex][localRow][localCol]
             if valid[a]:
                 break
             else:

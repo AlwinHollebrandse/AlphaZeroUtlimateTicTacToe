@@ -3,7 +3,7 @@ Board class for the game of TicTacToe.
 Default board size is 9x9. In this game, the board is made of 9 3x3 localBoards
 Board data:
   1=white(O), -1=black(X), 0=empty, 2=unavailable TODO idk if a 2 is acceptable
-  first dim is localBoardIndex, 2nd is column within said subBoard, and 3rd is row within the localBoard
+  first dim is localBoardIndex, 2nd is column within said subBoard, and 3rd is localRow within the localBoard
      globalBoard[0][0][0] is the top left square within the top left board,
      globalBoard[0][2][0] is the bottom left square within the top left board,
 Squares are stored and manipulated as (x,y,z) tuples.
@@ -42,19 +42,19 @@ class GlobalBoard():
 
         # Get all the empty squares (color==0)
         for localBoardIndex in self.validLocalBoardIndex: 
-            for row in range(self.n):
-                for col in range(self.n):
-                    if self.globalBoard[localBoardIndex][row][col] == 0:
-                        newmove = (localBoardIndex, row, col)
+            for localRow in range(self.n):
+                for localCol in range(self.n):
+                    if self.globalBoard[localBoardIndex][localRow][localCol] == 0:
+                        newmove = (localBoardIndex, localRow, localCol)
                         allLegalMoves.add(newmove)
         return list(allLegalMoves)
 
     def has_legal_moves(self):
         '''checks if there is a legal move available'''
         for localBoardIndex in self.validLocalBoardIndex: 
-            for row in range(self.n): # TODO correct row vs col ordering?
-                for col in range(self.n):
-                    if self.globalBoard[localBoardIndex][row][col] == 0:
+            for localRow in range(self.n): # TODO correct localRow vs localCol ordering?
+                for localCol in range(self.n):
+                    if self.globalBoard[localBoardIndex][localRow][localCol] == 0:
                         return True
         return False
 
@@ -131,21 +131,21 @@ class GlobalBoard():
 
     def execute_move(self, move, player):
         '''Perform the given move on the board 
-        @param move (a 3-tuple that holds the localBoardIndex, row, and col of the desired move)
+        @param move (a 3-tuple that holds the localBoardIndex, localRow, and localCol of the desired move)
         @param player (1=O,-1=X)
         '''
-        (localBoardIndex, row, col) = move
+        (localBoardIndex, localRow, localCol) = move
 
         # Add the piece to the empty square.
-        assert self.globalBoard[localBoardIndex][row][col] == 0
-        self.globalBoard[localBoardIndex][row][col] = player
+        assert self.globalBoard[localBoardIndex][localRow][localCol] == 0
+        self.globalBoard[localBoardIndex][localRow][localCol] = player
         
         # fill the local board with 'unavailable' (value=2) if a local winner was found
         if self.check_current_state(self.globalBoard[localBoardIndex]) != None:
             self.fill_all_local_empty_spaces(self.globalBoard[localBoardIndex])
         
         # get the next localBoardIndex list
-        potentialNextLocalBoardIndex = (self.n * row) + col
+        potentialNextLocalBoardIndex = (self.n * localRow) + localCol
         if self.check_current_state(self.globalBoard[potentialNextLocalBoardIndex]) == None:
             self.validLocalBoardIndex = potentialNextLocalBoardIndex
         else:
