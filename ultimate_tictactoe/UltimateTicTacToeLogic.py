@@ -1,3 +1,5 @@
+import numpy as np
+
 '''
 Board class for the game of TicTacToe.
 Default board size is 9x9. In this game, the board is made of 9 3x3 localBoards
@@ -13,8 +15,6 @@ Date: March 5, 2021.
 
 Based on the board for the game of 3D TicTacToe by Adam Lawson.
 '''
-
-import numpy as np
 
 # TODO check what functions are actually used
 class GlobalBoard():

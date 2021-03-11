@@ -7,15 +7,15 @@ from keras.models import *
 from keras.layers import *
 from keras.optimizers import *
 
-"""
-NeuralNet for the game of TicTacToe.
+'''
+NeuralNet for the game of UltimateTicTacToe.
 
-Author: Evgeny Tyurin, github.com/evg-tyurin
-Date: Jan 5, 2018.
+Author: Alwin Hollebrandse, github.com/AlwinHollebrandse
+Date: March 11, 2021.
 
 Based on the OthelloNNet by SourKream and Surag Nair.
-"""
-class TicTacToeNNet():
+'''
+class UltimateTicTacToeNNet():
     def __init__(self, game, args):
         # game params
         self.board_x, self.board_y = game.getBoardSize()
