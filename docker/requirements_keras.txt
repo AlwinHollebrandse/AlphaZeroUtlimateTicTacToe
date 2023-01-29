@@ -1,0 +1,17 @@
+Numpy
+Pandas
+Scikit-learn
+scikit-image
+Matplotlib
+Scipy
+Seaborn
+keras
+jupyter
+pyyaml
+ipykernel
+keras
+cuda-python
+tensorflow
+coloredlogs
+cython
+tqdm

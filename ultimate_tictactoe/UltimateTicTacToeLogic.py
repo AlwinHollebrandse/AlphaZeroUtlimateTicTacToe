@@ -1,7 +1,7 @@
 import numpy as np
 
 '''
-Board class for the game of TicTacToe.
+Board class for the game of Inception TicTacToe.
 Default board size is 9x9. In this game, the board is made of 9 3x3 localBoards
 Board data:
   1=white(O), -1=black(X), 0=empty, 2=unavailable TODO idk if a 2 is acceptable
@@ -44,8 +44,9 @@ class GlobalBoard():
         for localBoardIndex in self.validLocalBoardIndex: 
             for localRow in range(self.n):
                 for localCol in range(self.n):
-                    if self.globalBoard[localBoardIndex][localRow][localCol] == 0:
+                    if abs(self.globalBoard[localBoardIndex][localRow][localCol]) == 0:
                         newmove = (localBoardIndex, localRow, localCol)
+                        # newmove = (localBoardIndex * self.n * self.n) + (localRow * self.n) + (localCol)
                         allLegalMoves.add(newmove)
         return list(allLegalMoves)
 
@@ -54,7 +55,7 @@ class GlobalBoard():
         for localBoardIndex in self.validLocalBoardIndex: 
             for localRow in range(self.n): # TODO correct localRow vs localCol ordering?
                 for localCol in range(self.n):
-                    if self.globalBoard[localBoardIndex][localRow][localCol] == 0:
+                    if abs(self.globalBoard[localBoardIndex][localRow][localCol]) == 0:
                         return True
         return False
 
@@ -137,7 +138,7 @@ class GlobalBoard():
         (localBoardIndex, localRow, localCol) = move
 
         # Add the piece to the empty square.
-        assert self.globalBoard[localBoardIndex][localRow][localCol] == 0
+        assert abs(self.globalBoard[localBoardIndex][localRow][localCol]) == 0
         self.globalBoard[localBoardIndex][localRow][localCol] = player
         
         # fill the local board with 'unavailable' (value=2) if a local winner was found
@@ -147,7 +148,7 @@ class GlobalBoard():
         # get the next localBoardIndex list
         potentialNextLocalBoardIndex = (self.n * localRow) + localCol
         if self.check_current_state(self.globalBoard[potentialNextLocalBoardIndex]) == None:
-            self.validLocalBoardIndex = potentialNextLocalBoardIndex
+            self.validLocalBoardIndex = [potentialNextLocalBoardIndex]
         else:
             self.validLocalBoardIndex = []
             for i in range(self.numberOfLocalBoards):
@@ -160,3 +161,9 @@ class GlobalBoard():
             for j in range(self.n):
                 if board[i][j] == 0:
                     board[i][j] = 2
+
+    def toString(self):
+        print('n: ', self.n)
+        print('numberOfLocalBoards: ', self.numberOfLocalBoards)
+        print('validLocalBoardIndex: ', self.validLocalBoardIndex)
+        # print('globalBoard: ', self.globalBoard)

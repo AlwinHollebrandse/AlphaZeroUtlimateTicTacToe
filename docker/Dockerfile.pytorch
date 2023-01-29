@@ -21,11 +21,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
      rm -rf /var/lib/apt/lists/*
 
 # Install miniconda, pytorch and other useful python libraries
-RUN curl -o ~/miniconda.sh -O  https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh  && \
+RUN curl -L -o ~/miniconda.sh -O  https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh  && \
 chmod +x ~/miniconda.sh && \
-~/miniconda.sh -b -p /opt/conda && \
+bash ~/miniconda.sh -b -p /opt/conda && \
 rm ~/miniconda.sh && \
-/opt/conda/bin/conda install numpy pyyaml scipy cython jupyter ipython mkl mkl-include && \
+/opt/conda/bin/conda install numpy pyyaml scipy cython jupyter python=3.7 mkl mkl-include && \
 /opt/conda/bin/conda install -c soumith magma-cuda90 && \
 /opt/conda/bin/conda install pytorch=0.4.1 -c pytorch && \
 /opt/conda/bin/conda clean -ya

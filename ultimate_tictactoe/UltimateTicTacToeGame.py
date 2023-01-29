@@ -31,7 +31,7 @@ class UltimateTicTacToeGame(Game):
 
     def getActionSize(self):
         '''return number of actions'''
-        return self.numberOfLocalBoards * self.n * self.n + 1
+        return self.numberOfLocalBoards * self.n * self.n  + 1 # per Othello getSym, the +1 is for "1 for pass"
 
     def getNextState(self, board, player, action): # TODO need to recall prev local/curr localboard, while only returnung the tuple
         '''if player takes action on board, return next (board,player)
@@ -50,21 +50,22 @@ class UltimateTicTacToeGame(Game):
         # move is int that is 0-getActionSize
         # TODO is 0-8 first localboard values, or the top 9 vlaues of the global board?
         localBoardIndex = int(action / self.numberOfLocalBoards) # NOTE this uses the option 1 in above TODO
-        localRow = int(localBoardIndex / self.n)
-        localCol = int(localBoardIndex % self.n)
-        move = (localBoardIndex, localRow, localCol) # TODO first tuple value relates to action how?
+        actionModLocalBoards = int(action % self.numberOfLocalBoards)
+        localRow = int(actionModLocalBoards / self.n)
+        localCol = int(actionModLocalBoards % self.n)
+        move = (localBoardIndex, localRow, localCol)
+        # self.display(self.b.globalBoard)
         self.b.execute_move(move, player)
         return (self.b.globalBoard, -player)
 
     def getValidMoves(self, board, player):
         '''return a fixed size binary vector'''
         valids = [0]*self.getActionSize()
-        # TODO by recreating GlobalBoard each time, validLocalBoardIndex is lost and valid moves is wrong
         # b = GlobalBoard(self.n, self.numberOfLocalBoards) # TODO why cant this just be global? and reset on the init func?
         self.b.globalBoard = np.copy(board)
         legalMoves = self.b.get_legal_moves(player)
         if len(legalMoves) == 0:
-            valids[-1] = 1
+            valids[-1] = 1 # TODO is this why theres a plus 1 in aciton size
             return np.array(valids)
         for localBoardIndex, localRow, localCol in legalMoves:
             valids[(self.numberOfLocalBoards * localBoardIndex) + (self.n * localRow) + localCol] = 1
@@ -93,20 +94,24 @@ class UltimateTicTacToeGame(Game):
         '''return state if player==1, else return -state if player==-1'''
         return player*board
 
-    # TODO not confident about this method
     def getSymmetries(self, board, pi):
-        '''mirror, rotational'''
-        # assert(len(pi) == self.n**2+1)  # 1 for pass TODO what should this be? 3d doesnt have it, orthello does
-        pi_board = np.reshape(pi[:-1], (self.numberOfLocalBoards, self.n, self.n))
+        # mirror, rotational
+        board = np.arange(81).reshape(self.n, self.n, self.n, self.n)
+        pi_board = np.reshape(pi[:-1], (self.n, self.n, self.n, self.n))
         l = []
-
-        for i in range(1, 5):
+        for i in range(1,5):
             for j in [True, False]:
-                newB = np.rot90(board, i)
-                newPi = np.rot90(pi_board, i)
                 if j:
+                    newB = np.rot90(board, k=i, axes=(3,2)) # inner boards rotations
+                    newB = np.rot90(newB, k=i, axes=(1,0)) # outer board rotations
+                    newPi = np.rot90(pi_board, k=i, axes=(3,2)) # inner boards rotations
+                    newPi = np.rot90(newPi, k=i, axes=(1,0)) # outer board rotations
+                else:
                     newB = np.fliplr(newB)
                     newPi = np.fliplr(newPi)
+                
+                newB = np.reshape(newB, (self.numberOfLocalBoards, self.n, self.n))
+                newPi = np.reshape(newPi, (self.numberOfLocalBoards, self.n, self.n))
                 l += [(newB, list(newPi.ravel()) + [pi[-1]])]
         return l
 
@@ -119,17 +124,17 @@ class UltimateTicTacToeGame(Game):
         print('\n')
         localBoardIndexes = [[0,1,2],[3,4,5],[6,7,8]]
         for layer in localBoardIndexes:
-            print('-----------------------------------------')
+            print('----------------------------------------------------------------------------------')
             print('| ' + str(board[layer[0]][0][0]) + ' | ' + str(board[layer[0]][0][1]) + ' | ' + str(board[layer[0]][0][2]) + ' ||| ' +
                 str(board[layer[1]][0][0]) + ' | ' + str(board[layer[1]][0][1]) + ' | ' + str(board[layer[1]][0][2]) + ' ||| ' +
                 str(board[layer[2]][0][0]) + ' | ' + str(board[layer[2]][0][1]) + ' | ' + str(board[layer[2]][0][2]) + ' |')
-            print('-----------------------------------------')
+            print('----------------------------------------------------------------------------------')
             print('| ' + str(board[layer[0]][1][0]) + ' | ' + str(board[layer[0]][1][1]) + ' | ' + str(board[layer[0]][1][2]) + ' ||| ' +
                 str(board[layer[1]][1][0]) + ' | ' + str(board[layer[1]][1][1]) + ' | ' + str(board[layer[1]][1][2]) + ' ||| ' +
                 str(board[layer[2]][1][0]) + ' | ' + str(board[layer[2]][1][1]) + ' | ' + str(board[layer[2]][1][2]) + ' |')
-            print('-----------------------------------------')
+            print('----------------------------------------------------------------------------------')
             print('| ' + str(board[layer[0]][2][0]) + ' | ' + str(board[layer[0]][2][1]) + ' | ' + str(board[layer[0]][2][2]) + ' ||| ' +
                 str(board[layer[1]][2][0]) + ' | ' + str(board[layer[1]][2][1]) + ' | ' + str(board[layer[1]][2][2]) + ' ||| ' +
                 str(board[layer[2]][2][0]) + ' | ' + str(board[layer[2]][2][1]) + ' | ' + str(board[layer[2]][2][2]) + ' |')    
-            print('-----------------------------------------')
+            print('----------------------------------------------------------------------------------')
         print('\n')
